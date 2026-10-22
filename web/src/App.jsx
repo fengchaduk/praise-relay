@@ -4,6 +4,11 @@ import './App.css'
 const NAME_MAX = 40
 const MESSAGE_MAX = 500
 
+// 서버와 같은 방식으로 세요. 앞뒤 공백은 빼고, 이모지도 한 글자로 쳐요.
+function countChars(text) {
+  return [...text.trim()].length
+}
+
 async function readError(response) {
   try {
     const body = await response.json()
@@ -42,7 +47,11 @@ function App() {
       .catch((e) => setLoadError(e.message || '칭찬 목록을 불러오지 못했어요.'))
   }, [])
 
-  const canSubmit = name.trim() !== '' && message.trim() !== '' && !saving
+  const nameCount = countChars(name)
+  const toCount = countChars(to)
+  const messageCount = countChars(message)
+  const tooLong = nameCount > NAME_MAX || toCount > NAME_MAX || messageCount > MESSAGE_MAX
+  const canSubmit = nameCount > 0 && messageCount > 0 && !tooLong && !saving
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -84,10 +93,14 @@ function App() {
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              maxLength={NAME_MAX}
               placeholder="내 이름"
               required
             />
+            {nameCount > NAME_MAX && (
+              <em className="over">
+                {NAME_MAX}자까지 쓸 수 있어요. 지금 {nameCount}자예요.
+              </em>
+            )}
           </label>
           <label className="field">
             <span>
@@ -96,9 +109,13 @@ function App() {
             <input
               value={to}
               onChange={(e) => setTo(e.target.value)}
-              maxLength={NAME_MAX}
               placeholder="비워 두어도 괜찮아요"
             />
+            {toCount > NAME_MAX && (
+              <em className="over">
+                {NAME_MAX}자까지 쓸 수 있어요. 지금 {toCount}자예요.
+              </em>
+            )}
           </label>
         </div>
         <label className="field">
@@ -106,15 +123,14 @@ function App() {
           <textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            maxLength={MESSAGE_MAX}
             rows={3}
             placeholder="고마웠던 점을 적어 주세요"
             required
           />
         </label>
         <div className="actions">
-          <span className="counter">
-            {message.length} / {MESSAGE_MAX}
+          <span className={messageCount > MESSAGE_MAX ? 'counter over' : 'counter'}>
+            {messageCount} / {MESSAGE_MAX}
           </span>
           {error && (
             <p className="error" role="alert">

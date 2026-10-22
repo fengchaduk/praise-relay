@@ -62,9 +62,9 @@ public class EntryController {
 		if (!(parse(body) instanceof Map<?, ?> value)) {
 			throw new ApiException(HttpStatus.BAD_REQUEST, "JSON 객체로 보내 주세요.");
 		}
-		String name = requiredText(value.get("name"), "name", 40);
-		String message = requiredText(value.get("message"), "message", 500);
-		String to = optionalText(value.get("to"), "to", 40);
+		String name = requiredText(value.get("name"), "칭찬하는 사람", 40);
+		String message = requiredText(value.get("message"), "칭찬 한마디", 500);
+		String to = optionalText(value.get("to"), "칭찬받는 사람", 40);
 		return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("entry", entries.insert(name, message, to)));
 	}
 
@@ -89,26 +89,34 @@ public class EntryController {
 		}
 	}
 
-	private static String requiredText(Object value, String field, int max) {
-		String text = optionalText(value, field, max);
+	// 오류 문장은 화면에 그대로 보이니 JSON 키 대신 화면 이름표(label)로 써요.
+	private static String requiredText(Object value, String label, int max) {
+		String text = optionalText(value, label, max);
 		if (text == null) {
-			throw new ApiException(HttpStatus.BAD_REQUEST, field + "을(를) 적어 주세요.");
+			throw new ApiException(HttpStatus.BAD_REQUEST, particle(label, "을", "를") + " 적어 주세요.");
 		}
 		return text;
 	}
 
-	private static String optionalText(Object value, String field, int max) {
+	private static String optionalText(Object value, String label, int max) {
 		if (value == null) {
 			return null;
 		}
 		if (!(value instanceof String raw)) {
-			throw new ApiException(HttpStatus.BAD_REQUEST, field + "은(는) 문자열이어야 해요.");
+			throw new ApiException(HttpStatus.BAD_REQUEST, particle(label, "은", "는") + " 글자로 보내 주세요.");
 		}
 		String text = raw.strip();
 		if (text.codePointCount(0, text.length()) > max) {
-			throw new ApiException(HttpStatus.BAD_REQUEST, field + "은(는) " + max + "자까지 쓸 수 있어요.");
+			throw new ApiException(HttpStatus.BAD_REQUEST, particle(label, "은", "는") + " " + max + "자까지 쓸 수 있어요.");
 		}
 		return text.isEmpty() ? null : text;
+	}
+
+	// 마지막 글자에 받침이 있으면 앞의 조사(을, 은), 없으면 뒤의 조사(를, 는)를 붙여요.
+	private static String particle(String word, String withFinal, String withoutFinal) {
+		char last = word.charAt(word.length() - 1);
+		boolean hasFinal = last >= '가' && last <= '힣' && (last - '가') % 28 != 0;
+		return word + (hasFinal ? withFinal : withoutFinal);
 	}
 
 	@Schema(name = "EntryRequest")
