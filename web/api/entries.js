@@ -31,6 +31,16 @@ function db() {
   return ready.then(() => sql)
 }
 
+// 한 인스턴스에 요청이 동시에 오면 postgres는 한 연결에 쿼리를 겹쳐 보내는데,
+// Supabase 연결 풀(트랜잭션 모드)은 겹친 쿼리에 답하지 않아 멈춰요. 그래서 한 번에 하나씩 보내요.
+let queue = Promise.resolve()
+
+function query(run) {
+  const result = queue.then(() => db()).then(run)
+  queue = result.catch(() => {})
+  return result
+}
+
 function toEntry(row) {
   return {
     id: row.id,
@@ -74,12 +84,11 @@ function requiredText(value, label, max) {
 }
 
 // 본문을 직접 읽어서 415, 413, 깨진 JSON, 문자열 아닌 값을 약속대로 걸러요.
-export async function readEntry(request) {
-  const type = (request.headers.get('content-type') || '').split(';')[0].trim().toLowerCase()
+export function readEntry(contentType, bytes) {
+  const type = (contentType || '').split(';')[0].trim().toLowerCase()
   if (type !== 'application/json') {
     throw new ApiError(415, 'Content-Type은 application/json이어야 해요.')
   }
-  const bytes = new Uint8Array(await request.arrayBuffer())
   if (bytes.length > MAX_BODY_BYTES) throw new ApiError(413, '본문이 8KiB를 넘어요.')
   let value
   try {
@@ -97,32 +106,44 @@ export async function readEntry(request) {
   }
 }
 
-function fail(error) {
-  if (error instanceof ApiError) return Response.json({ error: error.message }, { status: error.status })
-  console.error(error)
-  return Response.json({ error: '서버에서 문제가 생겼어요. 잠시 뒤 다시 시도해 주세요.' }, { status: 500 })
+// 본문은 9KiB까지만 읽어요. 그보다 크면 어차피 413이에요.
+async function readBody(req) {
+  const chunks = []
+  let size = 0
+  for await (const chunk of req) {
+    chunks.push(chunk)
+    size += chunk.length
+    if (size > MAX_BODY_BYTES) break
+  }
+  return Buffer.concat(chunks)
 }
 
-export async function GET() {
+export async function handle(method, contentType, readBytes) {
   try {
-    const sql = await db()
-    const rows = await sql`
-      SELECT id, name, message, recipient, created_at FROM entries ORDER BY id DESC LIMIT 200`
-    return Response.json({ entries: rows.map(toEntry) })
+    if (method === 'GET') {
+      const rows = await query((sql) => sql`
+        SELECT id, name, message, recipient, created_at FROM entries ORDER BY id DESC LIMIT 200`)
+      return [200, { entries: rows.map(toEntry) }]
+    }
+    if (method === 'POST') {
+      const { name, message, to } = readEntry(contentType, await readBytes())
+      const [row] = await query((sql) => sql`
+        INSERT INTO entries (name, message, recipient) VALUES (${name}, ${message}, ${to})
+        RETURNING id, name, message, recipient, created_at`)
+      return [201, { entry: toEntry(row) }]
+    }
+    return [405, { error: '이 주소에서 쓸 수 없는 요청 방식이에요.' }]
   } catch (error) {
-    return fail(error)
+    if (error instanceof ApiError) return [error.status, { error: error.message }]
+    console.error(error)
+    return [500, { error: '서버에서 문제가 생겼어요. 잠시 뒤 다시 시도해 주세요.' }]
   }
 }
 
-export async function POST(request) {
-  try {
-    const { name, message, to } = await readEntry(request)
-    const sql = await db()
-    const [row] = await sql`
-      INSERT INTO entries (name, message, recipient) VALUES (${name}, ${message}, ${to})
-      RETURNING id, name, message, recipient, created_at`
-    return Response.json({ entry: toEntry(row) }, { status: 201 })
-  } catch (error) {
-    return fail(error)
-  }
+// Web 방식(export GET)은 Vercel에서 응답 스트림이 닫히지 않아, 응답을 직접 끝내는 Node 방식으로 써요.
+export default async function handler(req, res) {
+  const [status, body] = await handle(req.method, req.headers['content-type'], () => readBody(req))
+  res.statusCode = status
+  res.setHeader('Content-Type', 'application/json; charset=utf-8')
+  res.end(JSON.stringify(body))
 }

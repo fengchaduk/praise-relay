@@ -1,0 +1,7 @@
+# Vercel에는 web 폴더만 필요해요. Spring 서버, 로컬 DB, 설치 폴더는 올리지 않아요.
+/api/
+**/data/
+**/node_modules/
+.agents/
+.claude/
+.env*
