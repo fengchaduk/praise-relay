@@ -146,6 +146,10 @@ p {
   font-size: 12px;
 }
 
+.empty.error {
+  color: var(--error);
+}
+
 .cards {
   list-style: none;
   padding: 0;

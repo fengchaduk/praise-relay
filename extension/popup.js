@@ -83,16 +83,26 @@ function renderList(entries) {
 }
 
 async function loadEntries() {
+  let response
   try {
-    const response = await fetch(API)
-    if (!response.ok) throw new Error(await readError(response))
-    const { entries } = await response.json()
-    renderList(entries)
-  } catch (error) {
-    statusBox.hidden = false
-    statusBox.textContent = error.message || '칭찬 목록을 불러오지 못했어요.'
-    statusBox.classList.add('error')
+    response = await fetch(API)
+  } catch {
+    // 네트워크가 끊기면 브라우저 영어 문구 대신 우리 문장을 보여 줘요.
+    showListError('서버에 연결할 수 없어요. 인터넷 연결을 확인해 주세요.')
+    return
   }
+  if (!response.ok) {
+    showListError(await readError(response))
+    return
+  }
+  const { entries } = await response.json()
+  renderList(entries)
+}
+
+function showListError(message) {
+  statusBox.hidden = false
+  statusBox.textContent = message
+  statusBox.classList.add('error')
 }
 
 form.addEventListener('input', refreshForm)
