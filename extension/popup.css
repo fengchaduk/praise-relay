@@ -1,0 +1,189 @@
+:root {
+  --bg: #fff9ef;
+  --surface: #ffffff;
+  --text: #3b2f2a;
+  --text-soft: #7a6a60;
+  --border: #f0dfc8;
+  --accent: #ff8a3d;
+  --accent-strong: #e8681a;
+  --accent-soft: #fff0e2;
+  --error: #c2410c;
+
+  font-family: 'Pretendard', system-ui, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--bg);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  width: 380px;
+  margin: 0;
+  padding: 16px;
+  background: var(--bg);
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.header h1 {
+  font-size: 20px;
+  color: var(--accent-strong);
+}
+
+.header a {
+  font-size: 12px;
+  color: var(--text-soft);
+}
+
+.form {
+  margin-top: 12px;
+  padding: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.field {
+  display: grid;
+  gap: 4px;
+  font-weight: 600;
+}
+
+.field small {
+  font-weight: 400;
+  color: var(--text-soft);
+}
+
+.field input,
+.field textarea {
+  font: inherit;
+  font-weight: 400;
+  color: var(--text);
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fffdf9;
+  resize: vertical;
+}
+
+.field input:focus,
+.field textarea:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.counter {
+  color: var(--text-soft);
+  font-size: 12px;
+}
+
+.over,
+.counter.over {
+  color: var(--error);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+}
+
+.actions button {
+  font: inherit;
+  font-weight: 700;
+  color: #fff;
+  background: var(--accent);
+  border: none;
+  border-radius: 999px;
+  padding: 8px 18px;
+  cursor: pointer;
+}
+
+.actions button:hover:not(:disabled) {
+  background: var(--accent-strong);
+}
+
+.actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.error {
+  color: var(--error);
+  font-size: 12px;
+}
+
+.list {
+  margin-top: 16px;
+}
+
+.list h2 {
+  font-size: 15px;
+}
+
+.empty {
+  margin-top: 8px;
+  color: var(--text-soft);
+  font-size: 12px;
+}
+
+.cards {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  max-height: 300px;
+  overflow-y: auto;
+  display: grid;
+  gap: 8px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  display: grid;
+  gap: 4px;
+}
+
+.card:first-child {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.who {
+  font-weight: 700;
+}
+
+.to {
+  color: var(--accent-strong);
+}
+
+.message {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.card time {
+  color: var(--text-soft);
+  font-size: 11px;
+}

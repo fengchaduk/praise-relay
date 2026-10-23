@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <title>칭찬 릴레이</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header class="header">
+      <h1>칭찬 릴레이</h1>
+      <a id="open-site" href="https://praise-relay-jet.vercel.app" target="_blank">웹에서 보기</a>
+    </header>
+
+    <form id="form" class="form" novalidate>
+      <label class="field">
+        <span>칭찬하는 사람</span>
+        <input id="name" placeholder="내 이름" autocomplete="nickname" />
+        <em id="name-over" class="over" hidden></em>
+      </label>
+      <label class="field">
+        <span>칭찬받는 사람 <small>(선택)</small></span>
+        <input id="to" placeholder="비워 두어도 괜찮아요" />
+        <em id="to-over" class="over" hidden></em>
+      </label>
+      <label class="field">
+        <span>칭찬 한마디</span>
+        <textarea id="message" rows="3" placeholder="고마웠던 점을 적어 주세요"></textarea>
+      </label>
+      <div class="actions">
+        <span id="counter" class="counter">0 / 500</span>
+        <button id="submit" type="submit" disabled>칭찬 남기기</button>
+      </div>
+      <p id="error" class="error" role="alert" hidden></p>
+    </form>
+
+    <section class="list">
+      <h2>최신 칭찬</h2>
+      <p id="status" class="empty">불러오는 중…</p>
+      <ul id="cards" class="cards"></ul>
+    </section>
+
+    <template id="card-template">
+      <li class="card">
+        <p class="who"><span class="from"></span><span class="to"></span></p>
+        <p class="message"></p>
+        <time></time>
+      </li>
+    </template>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
